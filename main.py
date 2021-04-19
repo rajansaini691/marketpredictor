@@ -112,6 +112,10 @@ class PerceptualMap(tk.Frame):
         ax.set_xlim(0,20)       # Set graph limits
         ax.set_ylim(0,20)
 
+        ax.minorticks_on()
+        ax.grid(b=True, which='minor')
+        ax.grid(b=True, which='major')
+
         # Use MarketSegmentPlot objects to draw each market segment
         market_segment_plots = [MarketSegmentPlot(ax, ms) for ms in market_segments]
 
@@ -130,13 +134,13 @@ class PerceptualMap(tk.Frame):
         # Allows the user to choose the point in time
         time_slider = tk.Scale(self, 
                 from_=0, to=10, resolution=1, orient=tk.HORIZONTAL,
-                command=lambda t: self.update_time(t, canvas, market_segment_plots))
+                command=lambda t: self.update_time(int(t), canvas, market_segment_plots),
+                length=300)
 
         # Put the slider onto the window
         time_slider.pack()
 
 
-    # TODO Rewrite completely (call update() on all children)
     def update_time(self, t, canvas, market_segment_plots):
         """
         Draw the market segments to the graph
@@ -145,6 +149,26 @@ class PerceptualMap(tk.Frame):
             msp.update(t)
 
         canvas.draw()
+
+
+    # TODO Add entry boxes so we can use this function
+    def update_point(self, ax, canvas, x=None, y=None):
+        """
+        Draw the desired point to the graph
+        """
+        assert(x is not None or y is not None)
+
+        help(self._point)
+        new_x, new_y = self._point
+
+        if x is not None:
+            new_x = x
+
+        if y is not None:
+            new_y = y
+
+        self._point = (new_x, new_y)
+        
 
 
 class Window(tk.Tk):
