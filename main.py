@@ -5,6 +5,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.figure import Figure
 import tkinter as tk
 from tkinter import ttk
+import numpy as np
 
 # TODO Taken from tutorial
 LARGE_FONT= ("Verdana", 12)
@@ -112,6 +113,17 @@ class PerceptualMap(tk.Frame):
         ax.set_xlim(0,20)       # Set graph limits
         ax.set_ylim(0,20)
 
+        # Add line going through 3 ideal points
+        # y = m*(x - x0) + y0
+        x0,y0 = 2.5-0.8, 17.5+0.8
+        x1,y1 = 7.5+1.4, 12.5-1.4
+        m = (y1-y0)/(x1-x0)
+        lin, = ax.plot([0, y0-m*x0], [x0-y0/m, 0])
+
+        # Add line going through initial size segment and in-between ideal
+        #x0,y0 = 
+
+        # Grid line
         ax.minorticks_on()
         ax.grid(b=True, which='minor')
         ax.grid(b=True, which='major')
