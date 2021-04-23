@@ -135,10 +135,13 @@ if __name__ == "__main__":
     market_segments = [low_end, traditional, high_end, performance, size]
 
     # Create products
-    test = Product("test", 5, 5, 0, num_years=NUM_YEARS)
-    idk = Product("idk", 2, 2, 0, num_years=NUM_YEARS)
+    cake = Product("Cake", performance=5.6, size=14.5, year=0, num_years=NUM_YEARS)
+    cedar = Product("Cedar", performance=3.0, size=17.0, year=0, num_years=NUM_YEARS)
+    cid = Product("Cid", performance=8.0, size=11.9, year=0, num_years=NUM_YEARS)
+    coat = Product("Coat", performance=7.4, size=13.2, year=0, num_years=NUM_YEARS)
+    cure = Product("Cure", performance=6.4, size=10.2, year=0, num_years=NUM_YEARS)
 
-    products = [test, idk]
+    products = [cake, cedar, cid, coat, cure]
     
     # GUI code
     app = Window(NUM_YEARS, market_segments, products)

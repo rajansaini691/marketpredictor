@@ -101,28 +101,28 @@ class ProductPlot:
         self._canvas = canvas
 
         # Draw coordinate
-        self._product_coord = ax.scatter(initial_size, initial_performance)
+        self._product_coord = ax.scatter(initial_performance, initial_size, c='#000')
 
         # ax.scatter automatically assigns each spot a new color,
         # so this guarantees that our colors will be unique
         self._color = self._product_coord.get_edgecolor()
 
         # Add text
-        self._name = ax.text(initial_size, initial_performance, name)
+        self._name = ax.text(initial_performance, initial_size, name)
 
         pub.subscribe(self._change_product, f"product_changed/{name}")
 
-    # FIXME Handle case when product_changed_stats updates
-    # stats outside of the current time.
+    # FIXME draw() should be called once per time change and once per
+    #       product change, pretty laggy rn
     def _change_product(self, name, time, coords):
         """
         Draw the name and product coordinate
         """
-        s,p = coords
+        p,s = coords
 
         # Update coordinate positioning
-        self._product_coord.set_offsets((s, p))
-        self._name.set_position((s, p))
+        self._product_coord.set_offsets((p, s))
+        self._name.set_position((p, s))
 
         self._canvas.draw()
 

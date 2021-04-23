@@ -63,7 +63,8 @@ class MarketSegmentPlot:
         ax.add_artist(self._circle)
 
         # Add text in the center of the circle
-        self._name = ax.text(*initial_centroid, industry_segment._name)
+        self._name = ax.text(*initial_centroid, industry_segment._name,
+                c=self._color, ha='center', va='center')
         
 
     def update(self, t):
