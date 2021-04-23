@@ -113,11 +113,11 @@ class ProductPlot:
         # Add text
         self._name = ax.text(initial_size, initial_performance, product._name)
 
-        pub.subscribe(self.change_product, f"product_changed/{product._name}")
+        pub.subscribe(self._change_product, f"product_changed/{product._name}")
 
     # FIXME Handle case when product_changed_stats updates
     # stats outside of the current time.
-    def change_product(self, name, time, coords):
+    def _change_product(self, name, time, coords):
         """
         Draw the name and product coordinate
         """
@@ -144,7 +144,11 @@ class ProductGUI:
                             (this class does not modify them, just uses
                             them for initialization)
         """
+        # TODO Get things side-by-side
         for p in products:
+            # Add label
+            tk.Label(parent, text=p._name).pack()
+
             # Add input stuff
             product_perf = tk.DoubleVar(value=p.get_performance())
             product_size = tk.DoubleVar(value=p.get_size())
