@@ -2,9 +2,19 @@
 # Market Predictor
 This will allow you to predict a market's positioning at various moments in time.
 
-## Example
-Move the slider at the bottom to change the market's positioning.
+## Usage
+Move the slider at the bottom to change the market's positioning. You can also update locations of products as well.
 ![](./screenshot.png)
+
+## Dependencies
+This list may grow longer as more features are added. Here is a list of things to `pip install`.
+
+ * `matplotlib`
+ * `numpy`
+ * `tkinter` (I think this comes pre-installed already)
+ * `pypubsub`
+
+Command: `pip install matplotlib numpy pypubsub`
 
 ## Installation
 ### Windows
@@ -17,7 +27,7 @@ Move the slider at the bottom to change the market's positioning.
          run the installer again and check the "Add (something) to path" box.
        * If you get `>>>` next to your cursor instead, that means python is installed! Type `quit()` and hit enter to get out. 
  * Install dependencies
-     * Open up a command prompt again and type `pip install matplotlib numpy`. 
+     * Open up a command prompt again and type `pip install matplotlib numpy pypubsub`. 
      * Why is this necessary? When I wrote my code, I actually used libraries written by other people to speed development.
        `matplotlib` does all of the plotting, and `numpy` does the math. 
  * Download [this thing](https://raw.githubusercontent.com/rajansaini691/marketpredictor/main/main.py) to a desired place on your computer.
@@ -32,13 +42,7 @@ Move the slider at the bottom to change the market's positioning.
       * If you get some sort of "command not found" error, you'll have to figure out how to [install git on a mac](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
       * If the git clone command didn't already work, try it again. It basically downloads all of the code to a folder on your computer automatically.
     * Type `cd marketpredictor`
-    * Type `pip install matplotlib numpy`. If this doesn't work, figure out how to install python on a mac
+    * Type `pip install matplotlib numpy pypubsub`. If this doesn't work, figure out how to install python on a mac
     * `python main.py` should run the program!
 ### Linux
 Just clone the repository and run `python main.py`
-
-## Dependencies
- * Tested with `python 3.9`
- * `matplotlib`
- * `numpy`
- * `tkinter`

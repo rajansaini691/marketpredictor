@@ -5,7 +5,7 @@ class Product:
     A product has a name, size, performance, and year.
     """
     def __init__(self, name: str, size: float, performance: float,
-                 year:int=None, num_years=None):
+            mtbf:int, year:int=None, num_years=None):
         """
         Note that num_years is the total number of years in the simulation (I think 6)
         """

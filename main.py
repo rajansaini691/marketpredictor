@@ -136,11 +136,11 @@ if __name__ == "__main__":
     market_segments = [low_end, traditional, high_end, performance, size]
 
     # Create products
-    cake = Product("Cake", performance=5.6, size=14.5, year=0, num_years=NUM_YEARS)
-    cedar = Product("Cedar", performance=3.0, size=17.0, year=0, num_years=NUM_YEARS)
-    cid = Product("Cid", performance=8.0, size=11.9, year=0, num_years=NUM_YEARS)
-    coat = Product("Coat", performance=7.4, size=13.2, year=0, num_years=NUM_YEARS)
-    cure = Product("Cure", performance=6.4, size=10.2, year=0, num_years=NUM_YEARS)
+    cake = Product("Cake", performance=5.6, size=14.5, mtbf=17500, year=0, num_years=NUM_YEARS)
+    cedar = Product("Cedar", performance=3.0, size=17.0, mtbf=14000, year=0, num_years=NUM_YEARS)
+    cid = Product("Cid", performance=8.0, size=11.9, mtbf=23000, year=0, num_years=NUM_YEARS)
+    coat = Product("Coat", performance=7.4, size=13.2, mtbf=26000, year=0, num_years=NUM_YEARS)
+    cure = Product("Cure", performance=6.4, size=10.2, mtbf=20400, year=0, num_years=NUM_YEARS)
 
     products = [cake, cedar, cid, coat, cure]
     
