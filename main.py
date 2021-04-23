@@ -1,6 +1,7 @@
 
 from marketsegment import MarketSegment, MarketSegmentPlot
-from product import Product, ProductPlot, ProductController
+from product.model import Product
+from product.controller import ProductController
 
 import matplotlib
 matplotlib.use("TkAGG")
