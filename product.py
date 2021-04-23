@@ -88,20 +88,17 @@ class ProductPlot:
     """
     Draws a Product to a given matplotlib axis
     """
-    def __init__(self, ax, canvas, product):
+    def __init__(self, ax, canvas, name, initial_size, initial_performance):
         """
         Parameters:
-            ax          The axis on which this stuff will be drawn
-            product     A Product object
+            ax                      The axis on which this stuff will be drawn
+            canvas                  The canvas on which this stuff will be drawn
+            name                    The product's name
+            initial_size            The product's initial position
+            initial_performance     The product's initial position
         """
         # Lets us refresh canvas when something changes
         self._canvas = canvas
-
-        # TODO We may not even need to store a copy of this guy
-        self._product = product
-
-        initial_size = product.get_size()
-        initial_performance = product.get_performance()
 
         # Draw coordinate
         self._product_coord = ax.scatter(initial_size, initial_performance)
@@ -111,9 +108,9 @@ class ProductPlot:
         self._color = self._product_coord.get_edgecolor()
 
         # Add text
-        self._name = ax.text(initial_size, initial_performance, product._name)
+        self._name = ax.text(initial_size, initial_performance, name)
 
-        pub.subscribe(self._change_product, f"product_changed/{product._name}")
+        pub.subscribe(self._change_product, f"product_changed/{name}")
 
     # FIXME Handle case when product_changed_stats updates
     # stats outside of the current time.
@@ -133,51 +130,64 @@ class ProductPlot:
 # This is a view
 class ProductGUI:
     """
-    Takes care of the GUI elements that allow user to modify location of products.
-    Renders them and generates user events.
+    Renders inputs needed to modify a single product and generates
+    user events
     """
-    def __init__(self, parent, products):
+    # TODO  Add a param that provides row, and a class responsible for
+    #       positioning these guys
+    def __init__(self, parent, name, initial_size, initial_performance):
         """
         Parameters:
-            parent          TK object to draw input boxes on
-            products        A list of Products to make inputs for
-                            (this class does not modify them, just uses
-                            them for initialization)
+            parent                  TK object to draw input boxes on
+            name                    Product name
+            initial_size            Initial value in text box
+            initial_performance     Initial value in text box
         """
         # TODO Get things side-by-side
-        for p in products:
-            # Add label
-            tk.Label(parent, text=p._name).pack()
+        # Add label
+        self._label = tk.Label(parent, text=name)
+        self._name = name
 
-            # Add input stuff
-            product_perf = tk.DoubleVar(value=p.get_performance())
-            product_size = tk.DoubleVar(value=p.get_size())
-            product_input_perf = ttk.Entry(parent, textvariable=product_perf)
-            product_input_size = ttk.Entry(parent, textvariable=product_size)
-            product_input_perf.pack()
-            product_input_size.pack()
+        # Add input stuff
+        self._perf_var = tk.DoubleVar(value=initial_performance)
+        self._size_var = tk.DoubleVar(value=initial_size)
+        self._perf_input = ttk.Entry(parent, textvariable=self._perf_var)
+        self._size_input = ttk.Entry(parent, textvariable=self._size_var)
+        self._perf_input.pack()
+        self._size_input.pack()
 
-            product_input_perf.bind('<Key-Return>',
-                lambda _: self._on_update_performance(p._name, product_perf))
-            product_input_size.bind('<Key-Return>',
-                lambda _: self._on_update_size(p._name, product_size))
+        self._perf_input.bind('<Key-Return>', self._on_update_performance)
+        self._size_input.bind('<Key-Return>', self._on_update_size)
 
-    def _on_update_performance(self, name, var):
+        # Put stuff onto the GUI
+        self.show()
+
+    def show(self):
+        self._label.pack()
+        self._perf_input.pack()
+        self._size_input.pack()
+
+    def _on_update_performance(self, _):
         """
-        Parameters:
-            name        Name of the product to update
-            var         The DoubleVar containing the data
+        Callback for when parameter gets updated
         """
-        pub.sendMessage("product_changing", name=name, performance=var.get())
+        try:
+            p = self._perf_var.get()
+            n = self._name
+            pub.sendMessage("product_changing", name=n, performance=p)
+        except:
+            print("Don't enter non-numbers, please")
 
     def _on_update_size(self, name, var):
         """
-        Parameters:
-            name        Name of the product to update
-            var         The DoubleVar containing the data
+        Callback for when parameter gets updated
         """
-        pub.sendMessage("product_changing", name=name, size=var.get())
-
+        try:
+            s = self._size_var.get()
+            n = self._name
+            pub.sendMessage("product_changing", name=n, size=s)
+        except:
+            print("Don't enter non-numbers, please")
 
 # This is a controller
 class ProductController:
@@ -195,10 +205,12 @@ class ProductController:
 
         # ProductPlot objects act as a view for products that render them
         # to an axis. They should not modify the products.
-        self._product_plots = [ProductPlot(axis, canvas, p) for p in products]
+        self._product_plots = [ProductPlot(axis, canvas, p._name, p.get_size(),
+                               p.get_performance()) for p in products]
 
         # Enables modification of the product
-        self._product_gui = ProductGUI(parent, products)
+        self._product_menu = [ProductGUI(parent, p._name, p.get_size(),
+                              p.get_performance()) for p in products]
 
         pub.subscribe(self._change_stats, 'product_changing')
         pub.subscribe(self._change_time, 'changing_time')
