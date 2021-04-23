@@ -1,6 +1,6 @@
 
 from marketsegment import MarketSegment, MarketSegmentPlot
-from product import Product, ProductPlot
+from product import Product, ProductPlot, ProductController
 
 import matplotlib
 matplotlib.use("TkAGG")
@@ -9,50 +9,7 @@ from matplotlib.figure import Figure
 import tkinter as tk
 from tkinter import ttk
 import numpy as np
-
-
-# TODO Perhaps this should just do a single product, and the PerceptualMap can use
-#      an array of these guys
-class ProductGUI:
-    """
-    Takes care of the GUI elements that allow user to modify location of products
-    """
-
-    def __init__(self, axis, canvas, products, parent):
-        """
-        Puts the products onto the given pyplot axis and adds input elements
-        to the provided parent (tkinter)
-        """
-        # Use ProductPlot objects to draw each product to the given axis
-        self._product_plots = [ProductPlot(axis, p) for p in products]
-
-        # FIXME We're only dealing with one product for now; we'll scale later
-        self._single_product = self._product_plots[0]
-        x, y = self._single_product.get_location()
-
-        # Product info
-        product_x = tk.DoubleVar(value=x)
-        product_y = tk.DoubleVar(value=y)
-        product_input_x = ttk.Entry(parent, textvariable=product_x)
-        product_input_y = ttk.Entry(parent, textvariable=product_y)
-        product_input_x.pack()
-        product_input_y.pack()
-
-        product_input_x.bind('<Key-Return>', lambda _: self.update_product(axis, canvas, x=product_x.get()))
-        product_input_y.bind('<Key-Return>', lambda _: self.update_product(axis, canvas, y=product_y.get()))
-
-
-    # TODO Add entry boxes so we can use this function
-    # TODO Figure out why ax is being passed as a param and get rid of it
-    def update_product(self, ax, canvas, x=None, y=None, t=0):
-        """
-        Draw the desired point to the graph
-        """
-        assert(x is not None or y is not None or t is not None)
-        self._single_product.update_stats(t, size=y, performance=x)
-
-        canvas.draw()
-
+from pubsub import pub
 
 
 # TODO Figure out how to let time slider and products talk to each other
@@ -105,7 +62,7 @@ class PerceptualMap(tk.Frame):
 
         # Allows the user to choose the point in time
         time_slider = tk.Scale(self,
-                from_=0, to=num_years, resolution=1, orient=tk.HORIZONTAL,
+                from_=0, to=num_years-1, resolution=1, orient=tk.HORIZONTAL,
                 command=lambda t: self.update_time(int(t), canvas, market_segment_plots),
                 length=300)
 
@@ -113,15 +70,18 @@ class PerceptualMap(tk.Frame):
         time_slider.pack()
 
         # This thing deals with products
-        self._pg = ProductGUI(ax, canvas, products, self)
+        self._pg = ProductController(ax, canvas, products, self)
 
         
     def update_time(self, t, canvas, market_segment_plots):
         """
         Draw the market segments to the graph
         """
+        # TODO Listen to event instead
         for msp in market_segment_plots:
             msp.update(t)
+        
+        pub.sendMessage("changing_time", time=t)
 
         canvas.draw()
 
@@ -175,9 +135,10 @@ if __name__ == "__main__":
     market_segments = [low_end, traditional, high_end, performance, size]
 
     # Create products
-    test = Product("test", 5, 5, 0, 1)
+    test = Product("test", 5, 5, 0, num_years=NUM_YEARS)
+    idk = Product("idk", 2, 2, 0, num_years=NUM_YEARS)
 
-    products = [test]
+    products = [test, idk]
     
     # GUI code
     app = Window(NUM_YEARS, market_segments, products)

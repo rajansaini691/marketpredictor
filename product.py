@@ -1,3 +1,23 @@
+from pubsub import pub
+import tkinter as tk
+from tkinter import ttk
+
+"""
+Message Passing API:
+    product_changed/{name}      Product has changed somehow. Its coordinates,
+                                name, and time must be sent so that the view
+                                can render it.
+
+    changing_time               UI-generated event telling all products to change
+                                their time
+                                Just need the time
+
+    product_changing            UI-generated event telling a single product to
+                                change a specific stat or stats. 
+                                name is required, as is at least one of size
+                                and performance. Passing None for time changes
+                                a stat at the product's current time.
+    """
 
 class Product:
     """
@@ -12,10 +32,8 @@ class Product:
         self._name = name
 
         # size[t], performance[t] gives the product's size/performance at year t
-        self._size = [0 for _ in range(num_years)]
-        self._size[0] = size
-        self._performance = [0 for _ in range(num_years)]
-        self._performance[0] = performance
+        self._size = [size for _ in range(num_years)]
+        self._performance = [performance for _ in range(num_years)]
 
         # Is the product actually in production?
         self._alive = True
@@ -27,20 +45,31 @@ class Product:
         """
         Change the product's current point in time        
         """
-        # TODO Change size and performance's indices
         self._year = t
+        pub.sendMessage(f"product_changed/{self._name}", name=self._name, coords=(self._performance[t], self._size[t]), time=self._year)
 
     def update_stats(self, t, size=None, performance=None):
         """
-        Update the size and performance for the provided year t.
+        Update the size and performance past the provided year t.
         """
         assert(size is not None or performance is not None)
+
+        if t is None:
+            t = self._year
+
         assert(t >= 0)
 
         if size is not None:
-            self._size[t] = size
+            self._size[t:] = len(self._size[t:]) * [size]
+
         if performance is not None:
-            self._performance[t] = performance
+            self._performance[t:] = len(self._performance[t:]) * [performance]
+
+        assert(len(self._size) == len(self._performance))
+
+        
+        # TODO Send name, curr_coords, (in future) customer score
+        pub.sendMessage(f"product_changed/{self._name}", name=self._name, coords=(self._performance[t], self._size[t]), time=t)
 
     def get_performance(self, t=None):
         """
@@ -54,17 +83,21 @@ class Product:
         """
         return self._size[t] if t is not None else self._size[self._year]
 
-# TODO Implement
+# This is a View()
 class ProductPlot:
     """
     Draws a Product to a given matplotlib axis
     """
-    def __init__(self, ax, product):
+    def __init__(self, ax, canvas, product):
         """
         Parameters:
             ax          The axis on which this stuff will be drawn
             product     A Product object
         """
+        # Lets us refresh canvas when something changes
+        self._canvas = canvas
+
+        # TODO We may not even need to store a copy of this guy
         self._product = product
 
         initial_size = product.get_size()
@@ -80,34 +113,101 @@ class ProductPlot:
         # Add text
         self._name = ax.text(initial_size, initial_performance, product._name)
 
-    def update(self, t):
+        pub.subscribe(self.change_product, f"product_changed/{product._name}")
+
+    # FIXME Handle case when product_changed_stats updates
+    # stats outside of the current time.
+    def change_product(self, name, time, coords):
         """
         Draw the name and product coordinate
         """
-        # Change the product's time
-        self._product.update_time(t)
+        s,p = coords
 
-        # Update size and performance
-        size = self._product.get_size()
-        performance = self._product.get_performance()
-        self._product_coord.set_offsets((size, performance))
+        # Update coordinate positioning
+        self._product_coord.set_offsets((s, p))
+        self._name.set_position((s, p))
 
-        # Update name
-        self._name.set_position(size, performance)
-
-    # TODO There should be a better way to do this. Probably have ProductPlot
-    # and Product be siblings owned by ProductGUI, rather than children->grandchildren. IDK, though
-    def update_stats(self, t, size=None, performance=None):
-        self._product.update_stats(t, size=size, performance=performance)
-
-        # Update size and performance
-        size = self._product.get_size()
-        performance = self._product.get_performance()
-        self._product_coord.set_offsets((size, performance))
-
-        # Update name
-        self._name.set_position((size, performance))
+        self._canvas.draw()
 
 
-    def get_location(self):
-        return (self._product.get_performance(), self._product.get_size())
+# This is a view
+class ProductGUI:
+    """
+    Takes care of the GUI elements that allow user to modify location of products.
+    Renders them and generates user events.
+    """
+    def __init__(self, parent, products):
+        """
+        Parameters:
+            parent          TK object to draw input boxes on
+            products        A list of Products to make inputs for
+                            (this class does not modify them, just uses
+                            them for initialization)
+        """
+        for p in products:
+            # Add input stuff
+            product_perf = tk.DoubleVar(value=p.get_performance())
+            product_size = tk.DoubleVar(value=p.get_size())
+            product_input_perf = ttk.Entry(parent, textvariable=product_perf)
+            product_input_size = ttk.Entry(parent, textvariable=product_size)
+            product_input_perf.pack()
+            product_input_size.pack()
+
+            product_input_perf.bind('<Key-Return>',
+                lambda _: self._on_update_performance(p._name, product_perf))
+            product_input_size.bind('<Key-Return>',
+                lambda _: self._on_update_size(p._name, product_size))
+
+    def _on_update_performance(self, name, var):
+        """
+        Parameters:
+            name        Name of the product to update
+            var         The DoubleVar containing the data
+        """
+        pub.sendMessage("product_changing", name=name, performance=var.get())
+
+    def _on_update_size(self, name, var):
+        """
+        Parameters:
+            name        Name of the product to update
+            var         The DoubleVar containing the data
+        """
+        pub.sendMessage("product_changing", name=name, size=var.get())
+
+
+# This is a controller
+class ProductController:
+    """
+    This should be the only thing talking to the tkinter window
+    and modifying the model. Acts as a mediator between views and products.
+    """
+    def __init__(self, axis, canvas, products, parent):
+        """
+        Listens for user input events (like updating the time) and
+        changes state of the given products accordingly 
+        """
+        # Index products by name for better lookups
+        self._products = {p._name: p for p in products}
+
+        # ProductPlot objects act as a view for products that render them
+        # to an axis. They should not modify the products.
+        self._product_plots = [ProductPlot(axis, canvas, p) for p in products]
+
+        # Enables modification of the product
+        self._product_gui = ProductGUI(parent, products)
+
+        pub.subscribe(self._change_stats, 'product_changing')
+        pub.subscribe(self._change_time, 'changing_time')
+
+    def _change_stats(self, name, time=None, size=None, performance=None):
+        assert(size is not None or performance is not None)
+        assert(name is not None)
+
+        p = self._products[name]
+        p.update_stats(time, size=size, performance=performance)
+
+    def _change_time(self, time):
+        for n in self._products:
+            p = self._products[n]
+            p.update_time(time)
+            
