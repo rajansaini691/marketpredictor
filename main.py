@@ -1,5 +1,5 @@
 
-from marketsegment import MarketSegment, MarketSegmentPlot
+from marketsegment import MarketSegment, MarketSegmentPlot, Age, Price, Position, MTBF, BuyingCriteria
 from product.model import Product
 from product.controller import ProductController
 
@@ -47,7 +47,7 @@ class PerceptualMap(tk.Frame):
         ax.grid(b=True, which='major')
 
         # Use MarketSegmentPlot objects to draw each market segment
-        market_segment_plots = [MarketSegmentPlot(ax, ms) for ms in market_segments]
+        market_segment_plots = [MarketSegmentPlot(f, ax, ms) for ms in market_segments]
 
         # Hooks the graph up to the window somehow
         canvas = FigureCanvasTkAgg(f, self)
@@ -116,22 +116,51 @@ if __name__ == "__main__":
     # Constants
     NUM_YEARS = 10
 
+    # TODO Not sure about stdev; I'm setting to 1 for now,
+    #      but they should be higher
+    # Fill in customer criteria
+    traditional_criteria = BuyingCriteria(
+            age=Age(mean=2, stdev=1, importance=0.47),
+            price=Price(low=20, high=30, importance=0.23),
+            position=Position(importance=0.21),
+            mtbf = MTBF(low=14000, high=19000, importance=0.09))
+    low_end_criteria = BuyingCriteria(
+            price=Price(low=15, high=25, importance=0.53),
+            age=Age(mean=7, stdev=1, importance=0.24),
+            position=Position(importance=0.16),
+            mtbf = MTBF(low=12000, high=17000, importance=0.07))
+    high_end_criteria = BuyingCriteria(
+            position=Position(importance=0.43),
+            age=Age(mean=0, stdev=1, importance=0.29),
+            mtbf = MTBF(low=20000, high=25000, importance=0.19),
+            price=Price(low=30, high=40, importance=0.09))
+    performance_criteria = BuyingCriteria(
+            mtbf = MTBF(low=22000, high=27000, importance=0.43),
+            position=Position(importance=0.29),
+            price=Price(low=25, high=35, importance=0.19),
+            age=Age(mean=1, stdev=1, importance=0.09))
+    size_criteria = BuyingCriteria(
+            position=Position(importance=0.43),
+            age=Age(mean=1.5, stdev=1, importance=0.29),
+            mtbf = MTBF(low=16000, high=21000, importance=0.19),
+            price=Price(low=25, high=35, importance=0.09))
+
     # Create segments
     traditional = MarketSegment(
             starting_point=(5, 15), offset=(0, 0), drift=(0.7, -0.7),
-            name="Traditional")
+            customer_criteria=traditional_criteria, name="Traditional")
     low_end = MarketSegment(
             starting_point=(2.5, 17.5), offset=(-0.8, 0.8), drift=(0.5, -0.5),
-            name="Low End")
+            customer_criteria=low_end_criteria, name="Low End")
     performance = MarketSegment(
             starting_point=(8, 17), offset=(1.4, -1.0), drift=(1.0, -0.7),
-            name="Performance")
+            customer_criteria=performance_criteria, name="Performance")
     high_end = MarketSegment(
             starting_point=(7.5, 12.5), offset=(1.4, -1.4), drift=(0.9, -0.9),
-            name="High End")
+            customer_criteria=high_end_criteria, name="High End")
     size = MarketSegment(
             starting_point=(3, 12), offset=(1.0, -1.4), drift=(0.7, -1.0),
-            name="Size")
+            customer_criteria=size_criteria, name="Size")
 
     market_segments = [low_end, traditional, high_end, performance, size]
 

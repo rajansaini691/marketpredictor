@@ -1,8 +1,16 @@
 
 import matplotlib.pyplot as plt
+from collections import namedtuple
+from matplotlib.transforms import Affine2D, ScaledTranslation, offset_copy
+
+Age = namedtuple('Age', ['mean', 'stdev', 'importance'])
+Price = namedtuple('Price', ['low', 'high', 'importance'])
+Position = namedtuple('Position', ['importance'])
+MTBF = namedtuple('MTBF', ['low', 'high', 'importance'])
+BuyingCriteria = namedtuple('BuyingCriteria', ['age', 'price', 'position', 'mtbf'])
 
 class MarketSegment:
-    def __init__(self, starting_point, offset, drift, name):
+    def __init__(self, starting_point, offset, drift, customer_criteria, name):
         """
         Defines a new industry segment
 
@@ -10,12 +18,23 @@ class MarketSegment:
             starting_point      (performance, size)
             offset              An (x,y) tuple denoting the optimal point offset
             drift               An (x,y) tuple denoting the drift
+            customer_criteria   A BuyingCriteria class with the info used in
+                                this segment (see Conditions Report)
             name                A string providing the market segment's name
         """
         self._starting_point = starting_point
         self._offset = offset
         self._drift = drift
         self._name = name
+        self._criteria = customer_criteria
+
+        # Sanity check
+        should_be_one = (self._criteria.age.importance
+            + self._criteria.price.importance
+            + self._criteria.position.importance
+            + self._criteria.mtbf.importance)
+        assert(abs(should_be_one - 1) < 0.0000001)
+
 
     def get_location(self, t):
         """
@@ -35,14 +54,22 @@ class MarketSegment:
         dx, dy = self._offset
         return (x + dx, y + dy)
 
+    def get_price_range(self, t):
+        """
+        Get the price at a given year t (decreases by 0.5 each year)
+        returns (low, high)
+        """
+        return (self._criteria.price.low - .5*t, self._criteria.price.high - .5*t)
+
 
 class MarketSegmentPlot:
     """
     Draws a MarketSegment's various parameters for use with matplotlib
     """
-    def __init__(self, ax, industry_segment):
+    def __init__(self, fig, ax, industry_segment):
         """
         Parameters:
+            fig                 The figure on which this stuff will be drawn
             ax                  The axis on which this stuff will be drawn
             industry_segment    A MarketSegment object
         """
@@ -65,6 +92,14 @@ class MarketSegmentPlot:
         # Add text in the center of the circle
         self._name = ax.text(*initial_centroid, industry_segment._name,
                 c=self._color, ha='center', va='center')
+
+        # Add pricing info
+        self._price_display_offset = (0, 0.5)   # Where should price be drawn?
+        x0, y0 = initial_centroid
+        px, py = self._price_display_offset
+        p_low, p_high = industry_segment.get_price_range(0)
+        self._price = ax.text(x0 + px, y0 + py, f"\${p_low} to \${p_high}",
+                c=self._color, ha='center', va='center')
         
 
     def update(self, t):
@@ -85,3 +120,9 @@ class MarketSegmentPlot:
         # Update name
         self._name.set_position(new_centroid)
 
+        # Update price contents and location
+        p_low, p_high = self._industry_segment.get_price_range(t)
+        x, y = new_centroid
+        px, py = self._price_display_offset
+        self._price.set_position((x + px, y + py))
+        self._price.set_text(f"\${p_low} to \${p_high}")
