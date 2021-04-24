@@ -31,7 +31,7 @@ class ProductPlot:
 
     # FIXME draw() should be called once per time change and once per
     #       product change, pretty laggy rn
-    def _change_product(self, name, time, coords):
+    def _change_product(self, name, time, coords, time_change):
         """
         Draw the name and product coordinate
         """
@@ -41,7 +41,7 @@ class ProductPlot:
         self._product_coord.set_offsets((p, s))
         self._name.set_position((p, s))
 
-        self._canvas.draw()
-
-
-
+        # If the time has changed, lots of points will get redrawn,
+        # so no need to redraw the entire canvas
+        if time_change is not True:
+            self._canvas.draw()

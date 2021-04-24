@@ -27,7 +27,7 @@ class Product:
         Change the product's current point in time        
         """
         self._year = t
-        pub.sendMessage(f"product_changed/{self._name}", name=self._name, coords=(self._performance[t], self._size[t]), time=self._year)
+        pub.sendMessage(f"product_changed/{self._name}", name=self._name, coords=(self._performance[t], self._size[t]), time=self._year, time_change=True)
 
     def update_stats(self, t, size=None, performance=None):
         """
@@ -50,7 +50,7 @@ class Product:
 
         
         # TODO Send name, curr_coords, (in future) customer score
-        pub.sendMessage(f"product_changed/{self._name}", name=self._name, coords=(self._performance[t], self._size[t]), time=t)
+        pub.sendMessage(f"product_changed/{self._name}", name=self._name, coords=(self._performance[t], self._size[t]), time=t, time_change=False)
 
     def get_performance(self, t=None):
         """
