@@ -7,10 +7,12 @@ import matplotlib
 matplotlib.use("TkAGG")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 import tkinter as tk
 from tkinter import ttk
 import numpy as np
 from pubsub import pub
+
 
 
 # TODO Figure out how to let time slider and products talk to each other
@@ -28,9 +30,11 @@ class PerceptualMap(tk.Frame):
         # The actual graph
         f = Figure(figsize=(5,5), dpi=100)
         ax = f.add_subplot(111)
-        ax.set_title("Perceptual Map Predictor")
+        ax.set_title("Perceptual Map Predictor", fontsize=30)
         ax.set_xlim(0,20)       # Set graph limits
+        ax.xaxis.set_ticks(np.arange(0, 20, 2.0))
         ax.set_ylim(0,20)
+        ax.yaxis.set_ticks(np.arange(0, 20, 2.0))
 
         # Add line going through 3 ideal points
         # y = m*(x - x0) + y0
@@ -44,7 +48,7 @@ class PerceptualMap(tk.Frame):
         # Grid line
         ax.minorticks_on()
         ax.grid(b=True, which='minor')
-        ax.grid(b=True, which='major')
+        ax.grid(b=True, which='major', color='black')
 
         # Use MarketSegmentPlot objects to draw each market segment
         market_segment_plots = [MarketSegmentPlot(f, ax, ms) for ms in market_segments]
@@ -111,8 +115,24 @@ class Window(tk.Tk):
         self.frame = PerceptualMap(container, self, num_years, market_segments, products)
         self.frame.grid(row=0, column=0, sticky="nsew") # Something important
 
+def init():
+    """
+    Does some initializations, like font stuff
+    """
+    # Change plot font
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["font.size"] = 15
+    font_files = matplotlib.font_manager.findSystemFonts(fontpaths=r"./fonts/")
+
+    for font_file in font_files:
+        matplotlib.font_manager.fontManager.addfont(font_file)
+
+    plt.rcParams["font.sans-serif"] = "Raleway"
 
 if __name__ == "__main__":
+    # Does initializations
+    init()
+
     # Constants
     NUM_YEARS = 10
 

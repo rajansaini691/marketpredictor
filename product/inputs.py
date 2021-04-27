@@ -2,8 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 from pubsub import pub
 
-product_name_font = ("Arial", 14)
-attr_label_font = ("Arial", 9)
+product_name_font = ("Avant Garde", 14)
+attr_label_font = ("Avant Garde", 9)
 
 # This is a view
 class ProductGUI:
