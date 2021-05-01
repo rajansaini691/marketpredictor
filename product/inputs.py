@@ -66,7 +66,7 @@ class ProductGUI:
         except:
             print("Don't enter non-numbers, please")
 
-    def _on_update_size(self, name, var):
+    def _on_update_size(self, _):
         """
         Callback for when parameter gets updated
         """
