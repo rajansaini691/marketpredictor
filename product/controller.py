@@ -30,12 +30,12 @@ class ProductController:
         pub.subscribe(self._change_stats, 'product_changing')
         pub.subscribe(self._change_time, 'changing_time')
 
-    def _change_stats(self, name, time=None, size=None, performance=None):
-        assert(size is not None or performance is not None)
+    def _change_stats(self, name, time=None, size=None, performance=None, age=None):
+        assert(size is not None or performance is not None or age is not None)
         assert(name is not None)
 
         p = self._products[name]
-        p.update_stats(time, size=size, performance=performance)
+        p.update_stats(time, size=size, performance=performance, age=age)
 
     def _change_time(self, time):
         for n in self._products:

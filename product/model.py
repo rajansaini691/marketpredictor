@@ -34,7 +34,7 @@ class Product:
         """
         Update the size, performance, and age past the provided year t.
         """
-        assert(size is not None or performance is not None)
+        assert(size is not None or performance is not None or age is not None)
 
         if t is None:
             t = self._year
@@ -48,6 +48,7 @@ class Product:
             self._performance[t:] = len(self._performance[t:]) * [performance]
 
         if age is not None:
+            num_years = len(self._age)
             self._age[t:] = [age + i for i in range(num_years - t)]
             assert(len(self._age) == len(self._performance))
             assert(self._age[t] == age)

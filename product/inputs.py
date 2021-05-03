@@ -30,16 +30,23 @@ class ProductGUI:
                 self._frame, text="performance", font=attr_label_font)
         self._size_label = tk.Label(
                 self._frame, text="size", font=attr_label_font)
+        self._age_label = tk.Label(
+                self._frame, text="age", font=attr_label_font)
         self._name = name
 
         # Add input stuff
+        # TODO Might be able to abstract some of this
+        # (maybe a create_button(initial_value, callback) method? idk)
         self._perf_var = tk.DoubleVar(value=initial_performance)
         self._size_var = tk.DoubleVar(value=initial_size)
+        self._age_var = tk.DoubleVar(value=0)
         self._perf_input = ttk.Entry(self._frame, textvariable=self._perf_var)
         self._size_input = ttk.Entry(self._frame, textvariable=self._size_var)
+        self._age_input = ttk.Entry(self._frame, textvariable=self._age_var)
 
         self._perf_input.bind('<Key-Return>', self._on_update_performance)
         self._size_input.bind('<Key-Return>', self._on_update_size)
+        self._age_input.bind('<Key-Return>', self._on_update_age)
 
         # Put stuff onto the GUI
         self.show()
@@ -51,6 +58,8 @@ class ProductGUI:
         self._perf_input.pack()
         self._size_label.pack()
         self._size_input.pack()
+        self._age_label.pack()
+        self._age_input.pack()
 
         # Frames are horizontally-aligned
         self._frame.pack(side=tk.LEFT)
@@ -77,4 +86,14 @@ class ProductGUI:
         except:
             print("Don't enter non-numbers, please")
 
+    def _on_update_age(self, _):
+        """
+        Callback for when parameter gets updated
+        """
+        try:
+            a = self._age_var.get()
+            n = self._name
+            pub.sendMessage("product_changing", name=n, age=a)
+        except:
+            print("Don't enter non-numbers, please")
 
