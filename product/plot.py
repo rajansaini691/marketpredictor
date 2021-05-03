@@ -5,6 +5,7 @@ class ProductPlot:
     """
     Draws a Product to a given matplotlib axis
     """
+    # TODO Accept a single namedtuple containing the data rather than a list of attributes
     def __init__(self, ax, canvas, name, initial_size, initial_performance):
         """
         Parameters:
@@ -24,14 +25,15 @@ class ProductPlot:
         # so this guarantees that our colors will be unique
         self._color = self._product_coord.get_edgecolor()
 
-        # Add text
-        self._name = ax.text(initial_performance, initial_size, name)
+        # Add name+age label (with age of zero). For ex: "cake (0)"
+        self._name_label = ax.text(initial_performance, initial_size, f"{name} (0)")
+        self._product_name = name
 
         pub.subscribe(self._change_product, f"product_changed/{name}")
 
     # FIXME draw() should be called once per time change and once per
     #       product change, pretty laggy rn
-    def _change_product(self, name, time, coords, time_change):
+    def _change_product(self, name, time, coords, age, time_change):
         """
         Draw the name and product coordinate
         """
@@ -39,7 +41,8 @@ class ProductPlot:
 
         # Update coordinate positioning
         self._product_coord.set_offsets((p, s))
-        self._name.set_position((p, s))
+        self._name_label.set_position((p, s))
+        self._name_label.set_text(f"{name} ({age})")
 
         # If the time has changed, lots of points will get redrawn,
         # so no need to redraw the entire canvas
